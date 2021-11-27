@@ -1,0 +1,41 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+
+[packages]
+future = "*"
+futures = "*"
+pika = "==1.1.0"
+simplejson = "*"
+flask-blueprint = "*"
+flask-swagger = "*"
+jsonschema = "*"
+PyYAML = "*"
+Flask = "*"
+Flask-RESTful = "*"
+Flask-Cors = "*"
+importlib-metadata = "*"
+importlib-resources = "*"
+
+[requires]
+# 
+# I am on a roll testing the API on many different platforms, including
+#
+# - MacOS 11.6, python 3.6 (3.6.12)
+# - Ubuntu 18.04.6 LTS, python 3.6 (3.6.9)
+# - Ubuntu 20.04.3 LTS, python 3.8 (3.8.10)
+# - CentOS Linux release 7.9.2009 (Core), python 3.6 (3.6.8)
+# - Rocky Linux 8.4, python 3.6 (3.6.8)
+# - Red Hat Enterprise Linux 8.4, python 3.6 (3.6.8)
+#
+# I found that on Red Hat Enterprise Linux 8.4, when installing and testing with python 3.9, 
+# the pip requirements fail to install properly and the test suite fails to run. I think I 
+# will have explicitly specify python 3.6 here and make sure it is available on all test 
+# platforms.
+# 
+# python_version = "3"
+python_version = "3.6"
+
