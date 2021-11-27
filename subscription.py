@@ -11,8 +11,8 @@ client = GraphqlClient(
 
 query = """
     subscription serviceevent {
-        messages {
-            content
+        DHCPService {
+            id
         }
     }
 """
