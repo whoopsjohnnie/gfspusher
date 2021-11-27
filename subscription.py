@@ -3,7 +3,7 @@ import asyncio
 
 from python_graphql_client import GraphqlClient
 
-endpoint = "ws://localhost:5000/graphql/subscriptions"
+endpoint = "ws://localhost:5000/gfs1/graphql/subscriptions"
 
 client = GraphqlClient(
     endpoint=endpoint
