@@ -1394,6 +1394,11 @@ type updateSubnet {
 
 def subscription_dhcpservice_resolver(value, info, **args):
     print("subscription_dhcpservice_resolver")
+    schemas = GFSGQLSchemas.instance()
+    namespace = "gfs1"
+    label = "hello"
+    subject = schemas.subject(namespace, label)
+    return subject
 
 
 
