@@ -4,13 +4,12 @@
 # All rights reserved.
 # 
 
+import sys
+
 import os
 import logging
 
 import simplejson as json
-
-import asyncio
-import threading
 
 from flask import Flask
 from flask_restful import Api
@@ -29,6 +28,14 @@ from flask_socketio import send, emit
 from flask_sockets import Sockets
 from graphql_ws.gevent import  GeventSubscriptionServer
 
+import asyncio, os # , json
+import asyncio
+import threading
+
+from kafka import KafkaProducer
+from aiokafka import AIOKafkaConsumer
+
+from gfs.lib.config import GremlinFSConfig
 from gfs.api.graphql.resource.schema import GFSGQLSchemas
 from gfs.api.graphql.gql import GFSGQLView
 
@@ -51,6 +58,37 @@ app.app_protocol = lambda environ_path_info: 'graphql-ws'
 
 listen_addr = os.environ.get("LISTEN_ADDR", "0.0.0.0")
 listen_port = os.environ.get("LISTEN_PORT", "5000")
+
+# gfs_ns = os.environ.get("GFS_NAMESPACE", "gfs1")
+gfs_host = os.environ.get("GFS_HOST", "gfsapi")
+gfs_port = os.environ.get("GFS_PORT", "5000")
+gfs_username = os.environ.get("GFS_USERNAME", "root")
+gfs_password = os.environ.get("GFS_PASSWORD", "root")
+
+kafka_host = os.environ.get("KAFKA_HOST", "kafka")
+kafka_port = os.environ.get("KAFKA_PORT", "9092")
+kafka_username = os.environ.get("KAFKA_USERNAME", None) # "kafka")
+kafka_password = os.environ.get("KAFKA_PASSWORD", None) # "kafka")
+
+if len(sys.argv) >= 3:
+    listen_addr = sys.argv[1]
+    listen_port = sys.argv[2]
+
+elif len(sys.argv) >= 2:
+    listen_port = sys.argv[1]
+
+config = GremlinFSConfig(
+
+    kafka_host = kafka_host,
+    kafka_port = kafka_port,
+    kafka_username = kafka_username,
+    kafka_password = kafka_password
+
+)
+
+kftopic1 = config.get("kf_topic1", "gfs1")
+kftopic2 = config.get("kf_topic2", "gfs2")
+kfgroup = config.get("kf_group", "ripple-group")
 
 
 
@@ -123,8 +161,83 @@ app.add_url_rule(
 
 
 
+async def consume():
+    consumer = AIOKafkaConsumer(
+        # kftopic1, 
+        kftopic2, 
+        bootstrap_servers=str(kafka_host) + ":" + str(kafka_port), 
+        group_id=kfgroup
+    )
+    # Get cluster layout and join group `my-group`
+    await consumer.start()
+    try:
+        # Consume messages
+        async for msg in consumer:
+            print("consumed: ", msg.topic, msg.partition, msg.offset,
+                  msg.key, msg.value, msg.timestamp)
+            schemas = GFSGQLSchemas.instance()
+            namespace = "gfs1"
+            label = "hello"
+            subject = schemas.subject(namespace, label)
+            if subject:
+                subject.on_next({
+
+                })
+    finally:
+        # Will leave consumer group; perform autocommit if enabled.
+        await consumer.stop()
+
+
+
+# async def send_one():
+#     producer = AIOKafkaProducer(
+#         bootstrap_servers=str(kafka_host) + ":" + str(kafka_port)
+#     )
+#     # Get cluster layout and initial topic/partition leadership information
+#     await producer.start()
+#     try:
+#         # Produce message
+#         await producer.send_and_wait(kftopic1, b"Super message")
+#     finally:
+#         # Wait for all pending messages to be delivered or expire.
+#         await producer.stop()
+
+
+
+def __start_background_loop(thing):
+    def run_forever(thing):
+        # RuntimeError: There is no current event loop in thread 'Thread-1'.
+        # loop = asyncio.get_event_loop()
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        result = loop.run_until_complete(thing)
+
+    thread = threading.Thread(target=run_forever, args=(thing,))
+    thread.start()
+
+
+
+# Python 3.7
+# asyncio.run(consume())
+# asyncio.run(send_one())
+
+# Python 3.6
+# AttributeError: module 'asyncio' has no attribute 'run'
+# loop = asyncio.get_event_loop()
+# result = loop.run_until_complete(consume())
+__start_background_loop(consume())
+
+
+
 print(str(listen_addr))
 print(int(listen_port))
+
+print(str(kafka_host))
+print(str(kafka_port))
+
+print(str(kftopic1))
+print(str(kftopic2))
+print(str(kfgroup))
 
 # server = pywsgi.WSGIServer(('0.0.0.0', 5000), app, handler_class=WebSocketHandler)
 server = pywsgi.WSGIServer((str(listen_addr), int(listen_port)), app, handler_class=WebSocketHandler)
