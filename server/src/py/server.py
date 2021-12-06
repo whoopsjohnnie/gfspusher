@@ -92,31 +92,31 @@ kfgroup = config.get("kf_group", "ripple-group")
 
 
 
-@socketio.on('connect', namespace='/gfs1')
-def gfs1_connect():
-    emit('message', {'data': 'Connected'})
+# @socketio.on('connect', namespace='/gfs1')
+# def gfs1_connect():
+#     emit('message', {'data': 'Connected'})
 
-@socketio.on('disconnect', namespace='/gfs1')
-def gfs1_disconnect():
-    pass
+# @socketio.on('disconnect', namespace='/gfs1')
+# def gfs1_disconnect():
+#     pass
 
-@socketio.on('message', namespace='/gfs1')
-def handle_message(message):
-    emit("message", "message response")
+# @socketio.on('message', namespace='/gfs1')
+# def handle_message(message):
+#     emit("message", "message response")
 
 
 
-@sockets.route('/subscriptions')
-def echo_socket(ws):
-    subscription_server = GeventSubscriptionServer(
-        # GFSGQLSchema(
-        #     "gfs1", 
-        #     GFSGQLSchemas.instance()
-        # ) # GFSGQLSchemas.instance().schema("gfs1")
-        GFSGQLSchemas.instance().schema("gfs1")
-    )
-    subscription_server.handle(ws)
-    return []
+# @sockets.route('/subscriptions')
+# def echo_socket(ws):
+#     subscription_server = GeventSubscriptionServer(
+#         # GFSGQLSchema(
+#         #     "gfs1", 
+#         #     GFSGQLSchemas.instance()
+#         # ) # GFSGQLSchemas.instance().schema("gfs1")
+#         GFSGQLSchemas.instance().schema("gfs1")
+#     )
+#     subscription_server.handle(ws)
+#     return []
 
 @sockets.route('/<namespace>/graphql/subscriptions')
 def echo_socket2(ws, namespace):
@@ -135,15 +135,15 @@ def echo_socket2(ws, namespace):
 # schemas = GFSGQLSchemas()
 # GFSGQLSchemas.instance(schemas)
 
-view_func = GFSGQLView.as_view(
-    'graphql', 
-    namespace='gfs1', 
-    schemas=GFSGQLSchemas.instance()
-)
-app.add_url_rule(
-    '/<namespace>/graphql', 
-    view_func=view_func
-)
+# view_func = GFSGQLView.as_view(
+#     'graphql', 
+#     namespace='gfs1', 
+#     schemas=GFSGQLSchemas.instance()
+# )
+# app.add_url_rule(
+#     '/<namespace>/graphql', 
+#     view_func=view_func
+# )
 
 class GraphQLSchema(View):
 
@@ -219,6 +219,7 @@ async def consume():
             #     }
             # }
 
+            namespace = message.get('namespace', None)
             event = message.get('event', None)
             link = message.get('link', {})
             node = message.get('node', {})
@@ -229,12 +230,13 @@ async def consume():
             elif node:
                 nodeid = node.get('id', None)
                 nodelabel = node.get('label', None)
+                print(" NODE EVENT: namespace: " + str(namespace))
                 print(" NODE EVENT: event: " + str(event))
                 print(" NODE EVENT: node id: " + str(nodeid))
                 print(" NODE EVENT: node label: " + str(nodelabel))
                 if nodeid and nodelabel:
                     schemas = GFSGQLSchemas.instance()
-                    subject = schemas.subject("gfs1", nodelabel)
+                    subject = schemas.subject(namespace, nodelabel)
                     if subject:
                         subject.on_next(message)
     finally:
