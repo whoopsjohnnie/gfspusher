@@ -57,7 +57,7 @@ sockets = Sockets(app)
 app.app_protocol = lambda environ_path_info: 'graphql-ws'
 
 listen_addr = os.environ.get("LISTEN_ADDR", "0.0.0.0")
-listen_port = os.environ.get("LISTEN_PORT", "5000")
+listen_port = os.environ.get("LISTEN_PORT", "5002")
 
 # gfs_ns = os.environ.get("GFS_NAMESPACE", "gfs1")
 gfs_host = os.environ.get("GFS_HOST", "gfsapi")
@@ -173,16 +173,70 @@ async def consume():
     try:
         # Consume messages
         async for msg in consumer:
-            print("consumed: ", msg.topic, msg.partition, msg.offset,
-                  msg.key, msg.value, msg.timestamp)
-            schemas = GFSGQLSchemas.instance()
-            namespace = "gfs1"
-            label = "hello"
-            subject = schemas.subject(namespace, label)
-            if subject:
-                subject.on_next({
 
-                })
+            # print("consumed: ", msg.topic, msg.partition, msg.offset,
+            #       msg.key, msg.value, msg.timestamp)
+
+            print(" MESSAGE: topic: " + str(msg.topic) )
+            # print(" MESSAGE: key: " + str(msg.key) )
+            print(" MESSAGE: timestamp: " + str(msg.timestamp) )
+
+            message = json.loads(msg.value)
+
+            print( json.dumps(message) )
+
+            key = msg.key
+
+            # 
+            # LINK EVENT message
+            # 
+            # {
+            #     "event": "create_link",
+            #     "link": {
+            #         "id": 1234,
+            #         "label": "label",
+            #         "outV": 1235,
+            #         "inV": 1236
+            #     },
+            #     "source": {
+            #         "id": 1235,
+            #         "label": "label"
+            #     },
+            #     "target": {
+            #         "id": 1236,
+            #         "label": "label"
+            #     }
+            # }
+
+            # 
+            # NODE EVENT message
+            # 
+            # {
+            #     "event": "create_node",
+            #     "node": {
+            #         "id": 1235,
+            #         "label": "label"
+            #     }
+            # }
+
+            event = message.get('event', None)
+            link = message.get('link', {})
+            node = message.get('node', {})
+
+            if link:
+                pass
+
+            elif node:
+                nodeid = node.get('id', None)
+                nodelabel = node.get('label', None)
+                print(" NODE EVENT: event: " + str(event))
+                print(" NODE EVENT: node id: " + str(nodeid))
+                print(" NODE EVENT: node label: " + str(nodelabel))
+                if nodeid and nodelabel:
+                    schemas = GFSGQLSchemas.instance()
+                    subject = schemas.subject("gfs1", nodelabel)
+                    if subject:
+                        subject.on_next(message)
     finally:
         # Will leave consumer group; perform autocommit if enabled.
         await consumer.stop()
