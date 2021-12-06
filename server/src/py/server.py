@@ -221,8 +221,12 @@ async def consume():
 
             namespace = message.get('namespace', None)
             event = message.get('event', None)
+            chain = message.get('chain', [])
             link = message.get('link', {})
             node = message.get('node', {})
+
+            if not chain:
+                chain = []
 
             if link:
                 pass
@@ -253,9 +257,9 @@ async def consume():
                         subject.on_next({
                             "namespace": str(namespace), 
                             "event": str(event), 
+                            "chain": chain, 
                             "id": str(nodeid), 
                             "label": str(nodelabel), 
-                            "chain": [], 
                             # "node": 
                             "node": node
                         })
