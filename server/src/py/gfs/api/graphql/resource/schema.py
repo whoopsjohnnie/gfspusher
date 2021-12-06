@@ -1534,5 +1534,14 @@ class GFSGQLSchemas(GFSGQLDynamicObjectType):
         my_schema = self.build_executable_schema(namespace, source_schema)
         return my_schema
 
+    # TODO: Quick schema gen with no resolvers
+    # I use this for resolving field cardinality
+    def quickschema(self, namespace):
+        schema_definition = source_schema
+        ast = graphql.parse(schema_definition)
+        schema = graphql.build_ast_schema(ast)
+        my_schema = schema
+        return my_schema
+
     def subject(self, namespace, name):
         return self._subject

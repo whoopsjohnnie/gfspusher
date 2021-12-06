@@ -32,6 +32,8 @@ import asyncio, os # , json
 import asyncio
 import threading
 
+import graphql
+
 from kafka import KafkaProducer
 from aiokafka import AIOKafkaConsumer
 
@@ -161,6 +163,30 @@ app.add_url_rule(
 
 
 
+# 
+# Quick and dirty schema rectifier
+# TODO: Quick schema gen with no resolvers
+# I use this for resolving field cardinality
+# 
+def rewrite_node(node, schema, _type):
+    nnode = {}
+    for key in node:
+        val = node[key]
+        if _type and key in _type.fields:
+            if val and type(val) == dict:
+                typelabel = val.get("label")
+                if( isinstance(_type.fields[key].type, graphql.GraphQLList) ):
+                    nnode[key] = [rewrite_node(node[key], schema, schema.get_type(typelabel))]
+                else:
+                    nnode[key] = rewrite_node(node[key], schema, schema.get_type(typelabel))
+            else:
+                nnode[key] = val
+        else:
+            nnode[key] = val
+    return nnode
+
+
+
 async def consume():
     consumer = AIOKafkaConsumer(
         # kftopic1, 
@@ -238,6 +264,16 @@ async def consume():
                 print(" NODE EVENT: event: " + str(event))
                 print(" NODE EVENT: node id: " + str(nodeid))
                 print(" NODE EVENT: node label: " + str(nodelabel))
+
+                # 
+                # Quick and dirty schema rectifier
+                # TODO: Quick schema gen with no resolvers
+                # I use this for resolving field cardinality
+                # 
+                schemas = GFSGQLSchemas.instance()
+                schema = schemas.quickschema(namespace)
+                node = rewrite_node(node, schema, schema.get_type(nodelabel))
+
                 print({
                     "namespace": str(namespace), 
                     "event": str(event), 
