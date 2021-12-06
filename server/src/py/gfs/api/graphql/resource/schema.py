@@ -6,9 +6,13 @@
 
 import logging
 
+from inspect import Signature, Parameter
+
 from rx.subjects import Subject
 
 import graphql
+
+from gfs.api.graphql.resource.dynamic import GFSGQLDynamicObjectType
 
 
 
@@ -124,8 +128,8 @@ type DHCPServiceSubnet {
   created: String
   modified: String
   tags: [String]
-  rangeEnd: Ip
   netmask: Ip
+  rangeEnd: Ip
   routes: [Ip]
   network: Ip
   nextServer: Ip
@@ -392,8 +396,8 @@ type Ip {
   modified: String
   tags: [String]
   description: String
-  name: String
   address: String
+  name: String
 }
 
 type IpEvent {
@@ -413,8 +417,8 @@ input IpInput {
   uuid: String
   tags: [String]
   description: String
-  name: String!
   address: String!
+  name: String!
 }
 
 type Machine {
@@ -716,11 +720,11 @@ type Query {
   composes(name: String): [ComposeGQLType]
   DHCPServiceOptions(value: String, name: String, tags: [String]): [DHCPServiceOption]
   DHCPServiceOption(id: String!): DHCPServiceOption
-  Ips(name: String, address: String, tags: [String]): [Ip]
+  Ips(address: String, name: String, tags: [String]): [Ip]
   Ip(id: String!): Ip
-  Subnets(rangeEnd: IpInput, netmask: IpInput, routes: [IpInput], network: IpInput, nextServer: IpInput, rangeStart: IpInput, resolvers: [IpInput], routers: [IpInput], name: String, tags: [String]): [Subnet]
+  Subnets(netmask: IpInput, rangeEnd: IpInput, routes: [IpInput], network: IpInput, nextServer: IpInput, rangeStart: IpInput, resolvers: [IpInput], routers: [IpInput], name: String, tags: [String]): [Subnet]
   Subnet(id: String!): Subnet
-  DHCPServiceSubnets(rangeEnd: IpInput, netmask: IpInput, routes: [IpInput], network: IpInput, nextServer: IpInput, rangeStart: IpInput, resolvers: [IpInput], routers: [IpInput], name: String, options: [DHCPServiceOptionInput], tags: [String]): [DHCPServiceSubnet]
+  DHCPServiceSubnets(netmask: IpInput, rangeEnd: IpInput, routes: [IpInput], network: IpInput, nextServer: IpInput, rangeStart: IpInput, resolvers: [IpInput], routers: [IpInput], name: String, options: [DHCPServiceOptionInput], tags: [String]): [DHCPServiceSubnet]
   DHCPServiceSubnet(id: String!): DHCPServiceSubnet
   NetDevices(hwaddr: String, name: String, addresses: [IpInput], tags: [String]): [NetDevice]
   NetDevice(id: String!): NetDevice
@@ -915,8 +919,8 @@ type Subnet {
   created: String
   modified: String
   tags: [String]
-  rangeEnd: Ip
   netmask: Ip
+  rangeEnd: Ip
   routes: [Ip]
   network: Ip
   nextServer: Ip
@@ -943,10 +947,10 @@ input SubnetInput {
   id: String
   uuid: String
   tags: [String]
-  rangeEnd: IpInput
-  setRangeEnd: TypeRefInput
   netmask: IpInput
   setNetmask: TypeRefInput
+  rangeEnd: IpInput
+  setRangeEnd: TypeRefInput
   routes: [IpInput]
   addRoutes: [TypeRefInput]
   network: IpInput
@@ -1392,17 +1396,18 @@ type updateSubnet {
 
 
 
-def subscription_dhcpservice_resolver(value, info, **args):
-    print("subscription_dhcpservice_resolver")
-    schemas = GFSGQLSchemas.instance()
-    namespace = "gfs1"
-    label = "hello"
-    subject = schemas.subject(namespace, label)
-    return subject
+# # def subscription_dhcpservice_resolver(value, info, **args):
+# def subscription_resolver(value, info, **args):
+#     schemas = GFSGQLSchemas.instance()
+#     namespace = None
+#     label = None
+#     subject = schemas.subject(namespace, label)
+#     return subject
 
 
 
-class GFSGQLSchemas():
+# class GFSGQLSchemas():
+class GFSGQLSchemas(GFSGQLDynamicObjectType):
 
     __instance = None
 
@@ -1414,6 +1419,75 @@ class GFSGQLSchemas():
             GFSGQLSchemas.__instance = GFSGQLSchemas()
         return GFSGQLSchemas.__instance
 
+    # @classmethod
+    # def subscription_resolver(clazz, value, info, **args):
+    #   print("GFSGQLSchemas subscription_resolver")
+    #   print(value)
+    #   print(info)
+    #   schemas = GFSGQLSchemas.instance()
+    #   namespace = "gfs1"
+    #   label = "hello"
+    #   subject = schemas.subject(namespace, label)
+    #   return subject
+
+    @classmethod
+    def makeSubscriptionResolverFunctionSignature(clazz, namespace):
+
+        params = []
+        params.append(Parameter("clazz", kind=Parameter.POSITIONAL_OR_KEYWORD))
+        params.append(Parameter("value", kind=Parameter.POSITIONAL_OR_KEYWORD, default=None))
+        params.append(Parameter("info", kind=Parameter.POSITIONAL_OR_KEYWORD, default=None))
+
+        return params
+
+    @classmethod
+    def makeSubscriptionResolverFunction(clazz, namespace, name):
+
+        params = GFSGQLSchemas.makeSubscriptionResolverFunctionSignature(
+            namespace
+        )
+        sig = Signature(params)
+
+        # def resolve(*args, **kwargs):
+        #     print("GFSGQLSchemas makeSubscriptionResolverFunction resolve")
+        #     print(namespace)
+        #     print(name)
+        # 
+        #     clazz = None
+        #     value = None
+        #     info = None
+        # 
+        #     # clazz = args[0]
+        #     info = args[1]
+        #     # info = args[2]
+        # 
+        #     fields = GFSGQLSchemas.get_fields(info)
+        # 
+        #     return GFSGQLSchemas.instance().subject(namespace, name)
+
+        def resolve(*args, **kwargs):
+            print("GFSGQLSchemas makeSubscriptionResolverFunction resolve with filter")
+            print(namespace)
+            print(name)
+
+            root = args[0]
+            info = args[1]
+
+            events = None # args[2]
+            chain = None # args[3]
+
+            # https://docs.graphene-python.org/projects/django/en/latest/subscriptions/
+            # https://pypi.org/project/graphene-subscriptions/
+            return GFSGQLSchemas.instance().subject(namespace, name).filter(
+                lambda event: 
+                    event.get("namespace") == namespace and \
+                    event.get("label") == name
+                    # (not events or event.get("event") in events) and \
+                    # (not chain or ("-".join(event.get("chain", [])).startswith( "-".join(chain))))
+            ).map(lambda event: event)
+
+        return GFSGQLSchemas.createFunction('resolve', sig, resolve)
+
     # 
     # Borrowed from graphql_tools.py
     # def build_executable_schema(schema_definition, resolvers):
@@ -1423,40 +1497,41 @@ class GFSGQLSchemas():
     # accepts schema_definition (string) and resolvers (object) in style of graphql-tools
     # returns a schema ready for execution
     # 
-    def build_executable_schema(self, schema_definition, resolvers):
+    def build_executable_schema(self, namespace, schema_definition): # , resolvers):
         ast = graphql.parse(schema_definition)
         schema = graphql.build_ast_schema(ast)
-        
-        for typeName in resolvers:
-            fieldType = schema.get_type(typeName)
-            
-            for fieldName in resolvers[typeName]:            
-                if fieldType is graphql.GraphQLScalarType:
-                    fieldType.fields[fieldName].resolver = resolvers[typeName][fieldName]
-                    continue
-                
-                field = fieldType.fields[fieldName]
-                field.resolver = resolvers[typeName][fieldName]
-                
-            if not fieldType.fields: continue
-        
-            for remaining in fieldType.fields:
-                if not fieldType.fields[remaining].resolver:
-                    fieldType.fields[remaining].resolver = \
-                        lambda value, info, _r=remaining, **args: value[_r]
-                    
-                    
+
+        # for typeName in resolvers:
+        fieldType = schema.get_type("Subscription")
+
+        # for fieldName in resolvers[typeName]:
+        for fieldName in fieldType.fields:
+            if fieldType is graphql.GraphQLScalarType:
+                # fieldType.fields[fieldName].resolver = resolvers["Subscription"] # resolvers[typeName][fieldName]
+                fieldType.fields[fieldName].resolver = GFSGQLSchemas.makeSubscriptionResolverFunction(
+                    namespace, 
+                    fieldName
+                )
+                continue
+
+            field = fieldType.fields[fieldName]
+            # field.resolver = resolvers["Subscription"] # resolvers[typeName][fieldName]
+            field.resolver = GFSGQLSchemas.makeSubscriptionResolverFunction(
+                namespace, 
+                fieldName
+            )
+
+        # if not fieldType.fields: continue
+
+        for remaining in fieldType.fields:
+            if not fieldType.fields[remaining].resolver:
+                fieldType.fields[remaining].resolver = \
+                    lambda value, info, _r=remaining, **args: value[_r]
+
         return schema
 
     def schema(self, namespace):
-
-        resolvers = {
-            "Subscription": {
-                "DHCPService": subscription_dhcpservice_resolver
-            }
-        }
-
-        my_schema = self.build_executable_schema(source_schema, resolvers)
+        my_schema = self.build_executable_schema(namespace, source_schema)
         return my_schema
 
     def subject(self, namespace, name):

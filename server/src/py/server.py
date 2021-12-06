@@ -234,11 +234,32 @@ async def consume():
                 print(" NODE EVENT: event: " + str(event))
                 print(" NODE EVENT: node id: " + str(nodeid))
                 print(" NODE EVENT: node label: " + str(nodelabel))
+                print({
+                    "namespace": str(namespace), 
+                    "event": str(event), 
+                    "id": str(nodeid), 
+                    "label": str(nodelabel), 
+                    "chain": [], 
+                    # "node": 
+                    "node": node
+                })
+
                 if nodeid and nodelabel:
                     schemas = GFSGQLSchemas.instance()
                     subject = schemas.subject(namespace, nodelabel)
+                    # if subject:
+                    #     subject.on_next(message)
                     if subject:
-                        subject.on_next(message)
+                        subject.on_next({
+                            "namespace": str(namespace), 
+                            "event": str(event), 
+                            "id": str(nodeid), 
+                            "label": str(nodelabel), 
+                            "chain": [], 
+                            # "node": 
+                            "node": node
+                        })
+
     finally:
         # Will leave consumer group; perform autocommit if enabled.
         await consumer.stop()
