@@ -74,13 +74,17 @@ query = """
                         interface {
                             id,
                             addresses {
-                                id
+                                id,
+                                name,
+                                address
                             }
                         },
                         interfaces {
                             id,
                             addresses {
-                                id
+                                id,
+                                name,
+                                address
                             }
                         }
                     }
