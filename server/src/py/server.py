@@ -59,7 +59,7 @@ sockets = Sockets(app)
 app.app_protocol = lambda environ_path_info: 'graphql-ws'
 
 listen_addr = os.environ.get("LISTEN_ADDR", "0.0.0.0")
-listen_port = os.environ.get("LISTEN_PORT", "5002")
+listen_port = os.environ.get("LISTEN_PORT", "5000")
 
 # gfs_ns = os.environ.get("GFS_NAMESPACE", "gfs1")
 gfs_host = os.environ.get("GFS_HOST", "gfsapi")
@@ -221,16 +221,14 @@ async def consume():
             #     "link": {
             #         "id": 1234,
             #         "label": "label",
-            #         "outV": 1235,
-            #         "inV": 1236
-            #     },
-            #     "source": {
-            #         "id": 1235,
-            #         "label": "label"
-            #     },
-            #     "target": {
-            #         "id": 1236,
-            #         "label": "label"
+            #         "source": {
+            #             "id": 1235,
+            #             "label": "label"
+            #         },
+            #         "target": {
+            #             "id": 1236,
+            #             "label": "label"
+            #         }
             #     }
             # }
 
@@ -248,16 +246,29 @@ async def consume():
             namespace = message.get('namespace', None)
             event = message.get('event', None)
             chain = message.get('chain', [])
-            link = message.get('link', {})
-            node = message.get('node', {})
+            path = message.get('path', [])
+            origin = message.get('origin', {})
+            link = message.get('link', [])
+            node = message.get('node', [])
 
             if not chain:
                 chain = []
+
+            if not path:
+                path = []
 
             if link:
                 pass
 
             elif node:
+
+                # Set the origin, origin should never change
+                # but should be initialized to node if if not set
+                # as this would be the original event.
+                # Make sure to copy so we get the unaltered version.
+                if not origin:
+                    origin = node.copy()
+
                 nodeid = node.get('id', None)
                 nodelabel = node.get('label', None)
                 print(" NODE EVENT: namespace: " + str(namespace))
@@ -279,14 +290,17 @@ async def consume():
                     "event": str(event), 
                     "id": str(nodeid), 
                     "label": str(nodelabel), 
-                    "chain": [], 
+                    "chain": chain, 
                     # "node": 
-                    "node": node
+                    "node": node, 
+                    "origin": origin, 
+                    "path": path
                 })
 
                 if nodeid and nodelabel:
                     schemas = GFSGQLSchemas.instance()
-                    subject = schemas.subject(namespace, nodelabel)
+                    # subject = schemas.subject(namespace, nodelabel)
+                    subject = schemas.subject(namespace, event)
                     # if subject:
                     #     subject.on_next(message)
                     if subject:
@@ -297,7 +311,9 @@ async def consume():
                             "id": str(nodeid), 
                             "label": str(nodelabel), 
                             # "node": 
-                            "node": node
+                            "node": node, 
+                            "origin": origin, 
+                            "path": path
                         })
 
     finally:

@@ -22,77 +22,118 @@ client = GraphqlClient(
 
 # 
 # type Subscription {
-#   ...
-#   DHCPService(events: [String], chain: [String]): DHCPServiceEvent
-#   ...
+#   nodeEvent(events: [String], chain: [String]): NodeEvent
+#   linkEvent(events: [String], chain: [String]): LinkEvent
+#   instanceEvent(events: [String], chain: [String]): InstanceEvent
 # }
 # 
-# type DHCPServiceEvent {
+# type NodeEvent {
+#   namespace: String
 #   event: String
-#   id: String
-#   label: String
-#   sourceid: String
-#   sourcelabel: String
-#   targetid: String
-#   targetlabel: String
 #   chain: [String]
-#   node: DHCPService
+#   node: Node
+# }
+# 
+# type LinkEvent {
+#   namespace: String
+#   event: String
+#   chain: [String]
+#   link: Link
+# }
+# 
+# type InstanceEvent {
+#   namespace: String
+#   event: String
+#   chain: [String]
+#   instance: Instance
 # }
 # 
 
-# query = """
-#     subscription serviceevent {
-#         DHCPService {
-#             event,
-#             chain,
-#             id,
-#             label,
-#             sourceid,
-#             sourcelabel,
-#             targetid,
-#             targetlabel,
-#             node {
-#                 id
-#             }
-#         }
-#     }
-# """
-
+# 
+# events: ["create_node", "update_node"],
+# path: ["addresses", "interfaces"],
+# nodelabel: "Machine",
+# originlabel: "Ip"
+# 
 query = """
-    subscription serviceevent {
-        DHCPService {
+    subscription nodeevent {
+        nodeEvent {
+            namespace,
             event,
             chain,
-            id,
-            label,
             node {
+                namespace,
                 id,
-                hosts {
+                label
+            },
+            origin {
+                namespace,
+                id,
+                label
+            },
+            path {
+                namespace,
+                id,
+                label,
+                source {
+                    namespace,
                     id,
-                    members {
-                        id,
-                        interface {
-                            id,
-                            addresses {
-                                id,
-                                name,
-                                address
-                            }
-                        },
-                        interfaces {
-                            id,
-                            addresses {
-                                id,
-                                name,
-                                address
-                            }
-                        }
-                    }
+                    label
+                },
+                target {
+                    namespace,
+                    id,
+                    label
                 }
-            }
+            },
         }
     }
 """
+
+# query = """
+#     subscription linkevent {
+#         linkEvent {
+#             namespace,
+#             event,
+#             chain,
+#             node {
+#                 namespace,
+#                 id,
+#                 label
+#             },
+#             origin {
+#                 namespace,
+#                 id,
+#                 label,
+#                 source {
+#                     namespace,
+#                     id,
+#                     label
+#                 },
+#                 target {
+#                     namespace,
+#                     id,
+#                     label
+#                 }
+#             },
+#             path {
+#                 namespace,
+#                 id,
+#                 label,
+#                 source {
+#                     namespace,
+#                     id,
+#                     label
+#                 },
+#                 target {
+#                     namespace,
+#                     id,
+#                     label
+#                 }
+#             },
+#         }
+#     }
+# """
 
 # Asynchronous request
 loop = asyncio.get_event_loop()
