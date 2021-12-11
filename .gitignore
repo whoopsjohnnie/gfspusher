@@ -14,7 +14,8 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+# This hides my GFS lib package, no bueno
+# lib/
 lib64/
 parts/
 sdist/
