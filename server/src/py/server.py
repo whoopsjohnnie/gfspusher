@@ -8,6 +8,8 @@ import sys
 
 import os
 import logging
+logging.basicConfig(level=logging.INFO)
+# logging.basicConfig(level=logging.DEBUG)
 
 import simplejson as json
 
@@ -200,16 +202,16 @@ async def consume():
         # Consume messages
         async for msg in consumer:
 
-            # print("consumed: ", msg.topic, msg.partition, msg.offset,
+            # logging.debug("consumed: ", msg.topic, msg.partition, msg.offset,
             #       msg.key, msg.value, msg.timestamp)
 
-            print(" MESSAGE: topic: " + str(msg.topic) )
-            # print(" MESSAGE: key: " + str(msg.key) )
-            print(" MESSAGE: timestamp: " + str(msg.timestamp) )
+            logging.debug(" MESSAGE: topic: " + str(msg.topic) )
+            # logging.debug(" MESSAGE: key: " + str(msg.key) )
+            logging.debug(" MESSAGE: timestamp: " + str(msg.timestamp) )
 
             message = json.loads(msg.value)
 
-            print( json.dumps(message) )
+            logging.debug( json.dumps(message) )
 
             key = msg.key
 
@@ -271,10 +273,10 @@ async def consume():
 
                 nodeid = node.get('id', None)
                 nodelabel = node.get('label', None)
-                print(" NODE EVENT: namespace: " + str(namespace))
-                print(" NODE EVENT: event: " + str(event))
-                print(" NODE EVENT: node id: " + str(nodeid))
-                print(" NODE EVENT: node label: " + str(nodelabel))
+                logging.debug(" NODE EVENT: namespace: " + str(namespace))
+                logging.debug(" NODE EVENT: event: " + str(event))
+                logging.debug(" NODE EVENT: node id: " + str(nodeid))
+                logging.debug(" NODE EVENT: node label: " + str(nodelabel))
 
                 # 
                 # Quick and dirty schema rectifier
@@ -285,7 +287,7 @@ async def consume():
                 schema = schemas.quickschema(namespace)
                 node = rewrite_node(node, schema, schema.get_type(nodelabel))
 
-                print({
+                logging.debug({
                     "namespace": str(namespace), 
                     "event": str(event), 
                     "id": str(nodeid), 
@@ -362,15 +364,15 @@ __start_background_loop(consume())
 
 
 
-print(str(listen_addr))
-print(int(listen_port))
+logging.debug(str(listen_addr))
+logging.debug(int(listen_port))
 
-print(str(kafka_host))
-print(str(kafka_port))
+logging.debug(str(kafka_host))
+logging.debug(str(kafka_port))
 
-print(str(kftopic1))
-print(str(kftopic2))
-print(str(kfgroup))
+logging.debug(str(kftopic1))
+logging.debug(str(kftopic2))
+logging.debug(str(kfgroup))
 
 # server = pywsgi.WSGIServer(('0.0.0.0', 5000), app, handler_class=WebSocketHandler)
 server = pywsgi.WSGIServer((str(listen_addr), int(listen_port)), app, handler_class=WebSocketHandler)
