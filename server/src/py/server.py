@@ -189,6 +189,16 @@ def rewrite_node(node, schema, _type):
 
 
 
+def pathtostring(path):
+    spath = ""
+    if path:
+        for pathitem in path:
+            # if "label" in pathitem and "source" in pathitem and "target" in pathitem:
+            spath = "(" + pathitem.get("source", {}).get("label") + " " + pathitem.get("source", {}).get("id") + " -> " + pathitem.get("label") + " -> " + pathitem.get("target", {}).get("label") + " " + pathitem.get("target", {}).get("id") + ") " + spath
+    return spath
+
+
+
 async def consume():
     consumer = AIOKafkaConsumer(
         # kftopic1, 
@@ -250,8 +260,8 @@ async def consume():
             chain = message.get('chain', [])
             path = message.get('path', [])
             origin = message.get('origin', {})
-            link = message.get('link', [])
-            node = message.get('node', [])
+            link = message.get('link', {})
+            node = message.get('node', {})
 
             if not chain:
                 chain = []
@@ -273,10 +283,13 @@ async def consume():
 
                 nodeid = node.get('id', None)
                 nodelabel = node.get('label', None)
-                logging.debug(" NODE EVENT: namespace: " + str(namespace))
-                logging.debug(" NODE EVENT: event: " + str(event))
-                logging.debug(" NODE EVENT: node id: " + str(nodeid))
-                logging.debug(" NODE EVENT: node label: " + str(nodelabel))
+                originid = origin.get('id', None)
+                originlabel = origin.get('label', None)
+                # logging.debug(" NODE EVENT: namespace: " + str(namespace))
+                # logging.debug(" NODE EVENT: event: " + str(event))
+                # logging.debug(" NODE EVENT: node id: " + str(nodeid))
+                # logging.debug(" NODE EVENT: node label: " + str(nodelabel))
+                logging.info(" => EVENT: namespace: " + str(namespace) + ", event: " + str(event) + ", node: " + str(nodelabel) + " " + str(nodeid) + ", origin: " + str(originlabel) + " " + str(originid) + ", path: " + str(pathtostring(path)))
 
                 # 
                 # Quick and dirty schema rectifier
@@ -287,17 +300,17 @@ async def consume():
                 schema = schemas.quickschema(namespace)
                 node = rewrite_node(node, schema, schema.get_type(nodelabel))
 
-                logging.debug({
-                    "namespace": str(namespace), 
-                    "event": str(event), 
-                    "id": str(nodeid), 
-                    "label": str(nodelabel), 
-                    "chain": chain, 
-                    # "node": 
-                    "node": node, 
-                    "origin": origin, 
-                    "path": path
-                })
+                # logging.debug({
+                #     "namespace": str(namespace), 
+                #     "event": str(event), 
+                #     "id": str(nodeid), 
+                #     "label": str(nodelabel), 
+                #     "chain": chain, 
+                #     # "node": 
+                #     "node": node, 
+                #     "origin": origin, 
+                #     "path": path
+                # })
 
                 if nodeid and nodelabel:
                     schemas = GFSGQLSchemas.instance()
