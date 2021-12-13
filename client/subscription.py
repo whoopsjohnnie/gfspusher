@@ -3,6 +3,8 @@ import sys
 
 import os
 import logging
+logging.basicConfig(level=logging.INFO)
+# logging.basicConfig(level=logging.DEBUG)
 
 import asyncio
 
@@ -135,11 +137,47 @@ query = """
 #     }
 # """
 
+def pathtostring(path):
+    spath = ""
+    if path:
+        for pathitem in path:
+            # if "label" in pathitem and "source" in pathitem and "target" in pathitem:
+            spath = "(" + pathitem.get("source", {}).get("label") + " " + pathitem.get("source", {}).get("id") + " -> " + pathitem.get("label") + " -> " + pathitem.get("target", {}).get("label") + " " + pathitem.get("target", {}).get("id") + ") " + spath
+    return spath
+
+def callback(data = {}):
+
+    message = data.get("data", {}).get("nodeEvent", {})
+
+    namespace = message.get('namespace', None)
+    event = message.get('event', None)
+    chain = message.get('chain', [])
+    path = message.get('path', [])
+    origin = message.get('origin', {})
+    link = message.get('link', {})
+    node = message.get('node', {})
+
+    if not chain:
+        chain = []
+
+    if not path:
+        path = []
+
+    if node:
+
+        nodeid = node.get('id', None)
+        nodelabel = node.get('label', None)
+        originid = origin.get('id', None)
+        originlabel = origin.get('label', None)
+
+        logging.info(" => EVENT: namespace: " + str(namespace) + ", event: " + str(event) + ", node: " + str(nodelabel) + " " + str(nodeid) + ", origin: " + str(originlabel) + " " + str(originid) + ", path: " + str(pathtostring(path)))
+
 # Asynchronous request
 loop = asyncio.get_event_loop()
 loop.run_until_complete(
     client.subscribe(
         query=query, 
-        handle=print
+        # handle=print
+        handle=callback
     )
 )
