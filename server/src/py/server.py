@@ -36,8 +36,11 @@ import threading
 
 import graphql
 
-from kafka import KafkaProducer
-from aiokafka import AIOKafkaConsumer
+# from kafka import KafkaProducer
+# from aiokafka import AIOKafkaConsumer
+
+from kafka import KafkaConsumer
+# from kafka import KafkaProducer
 
 from gfs.lib.config import GremlinFSConfig
 from gfs.api.graphql.resource.schema import GFSGQLSchemas
@@ -199,30 +202,24 @@ def pathtostring(path):
 
 
 
-async def consume():
-    consumer = AIOKafkaConsumer(
-        # kftopic1, 
-        kftopic2, 
-        bootstrap_servers=str(kafka_host) + ":" + str(kafka_port), 
-        group_id=kfgroup
-    )
-    # Get cluster layout and join group `my-group`
-    await consumer.start()
-    try:
-        # Consume messages
-        async for msg in consumer:
+# async def consume():
+def consume():
+    schemas = GFSGQLSchemas.instance()
+    consumer = KafkaConsumer(
+        kftopic2,
+        bootstrap_servers=[ str(kafka_host) + ':' + str(kafka_port) ],
+        enable_auto_commit=True,
+        group_id=kfgroup,
+        auto_offset_reset='latest',
+        value_deserializer=lambda x: x.decode('utf-8'))
 
-            # logging.debug("consumed: ", msg.topic, msg.partition, msg.offset,
-            #       msg.key, msg.value, msg.timestamp)
+    for message in consumer:
 
-            logging.debug(" MESSAGE: topic: " + str(msg.topic) )
-            # logging.debug(" MESSAGE: key: " + str(msg.key) )
-            logging.debug(" MESSAGE: timestamp: " + str(msg.timestamp) )
+        if message:
+
+            msg = message
 
             message = json.loads(msg.value)
-
-            logging.debug( json.dumps(message) )
-
             key = msg.key
 
             # 
@@ -296,9 +293,8 @@ async def consume():
                 # TODO: Quick schema gen with no resolvers
                 # I use this for resolving field cardinality
                 # 
-                schemas = GFSGQLSchemas.instance()
-                schema = schemas.quickschema(namespace)
-                node = rewrite_node(node, schema, schema.get_type(nodelabel))
+                # schema = schemas.quickschema(namespace)
+                # node = rewrite_node(node, schema, schema.get_type(nodelabel))
 
                 # logging.debug({
                 #     "namespace": str(namespace), 
@@ -313,7 +309,6 @@ async def consume():
                 # })
 
                 if nodeid and nodelabel:
-                    schemas = GFSGQLSchemas.instance()
                     # subject = schemas.subject(namespace, nodelabel)
                     subject = schemas.subject(namespace, event)
                     # if subject:
@@ -331,36 +326,10 @@ async def consume():
                             "path": path
                         })
 
-    finally:
-        # Will leave consumer group; perform autocommit if enabled.
-        await consumer.stop()
-
-
-
-# async def send_one():
-#     producer = AIOKafkaProducer(
-#         bootstrap_servers=str(kafka_host) + ":" + str(kafka_port)
-#     )
-#     # Get cluster layout and initial topic/partition leadership information
-#     await producer.start()
-#     try:
-#         # Produce message
-#         await producer.send_and_wait(kftopic1, b"Super message")
-#     finally:
-#         # Wait for all pending messages to be delivered or expire.
-#         await producer.stop()
-
 
 
 def __start_background_loop(thing):
-    def run_forever(thing):
-        # RuntimeError: There is no current event loop in thread 'Thread-1'.
-        # loop = asyncio.get_event_loop()
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        result = loop.run_until_complete(thing)
-
-    thread = threading.Thread(target=run_forever, args=(thing,))
+    thread = threading.Thread(target=thing, args=())
     thread.start()
 
 
@@ -373,7 +342,8 @@ def __start_background_loop(thing):
 # AttributeError: module 'asyncio' has no attribute 'run'
 # loop = asyncio.get_event_loop()
 # result = loop.run_until_complete(consume())
-__start_background_loop(consume())
+# __start_background_loop(consume())
+__start_background_loop(consume)
 
 
 

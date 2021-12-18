@@ -39,7 +39,7 @@ Werkzeug==0.15.5
 Rx==1.6.1
 
 kafka-python
-aiokafka
+# aiokafka
 
 # 
 # REST/GraphQL test client
