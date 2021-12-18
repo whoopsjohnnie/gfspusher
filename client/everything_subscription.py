@@ -3,6 +3,7 @@ import sys
 
 import os
 import logging
+# logging.basicConfig(level=logging.ERROR)
 logging.basicConfig(level=logging.INFO)
 # logging.basicConfig(level=logging.DEBUG)
 
@@ -22,41 +23,6 @@ client = GraphqlClient(
     endpoint=endpoint
 )
 
-# 
-# type Subscription {
-#   nodeEvent(events: [String], chain: [String]): NodeEvent
-#   linkEvent(events: [String], chain: [String]): LinkEvent
-#   instanceEvent(events: [String], chain: [String]): InstanceEvent
-# }
-# 
-# type NodeEvent {
-#   namespace: String
-#   event: String
-#   chain: [String]
-#   node: Node
-# }
-# 
-# type LinkEvent {
-#   namespace: String
-#   event: String
-#   chain: [String]
-#   link: Link
-# }
-# 
-# type InstanceEvent {
-#   namespace: String
-#   event: String
-#   chain: [String]
-#   instance: Instance
-# }
-# 
-
-# 
-# events: ["create_node", "update_node"],
-# path: ["addresses", "interfaces"],
-# nodelabel: "Machine",
-# originlabel: "Ip"
-# 
 query = """
     subscription nodeevent {
         nodeEvent {
@@ -91,51 +57,6 @@ query = """
         }
     }
 """
-
-# query = """
-#     subscription linkevent {
-#         linkEvent {
-#             namespace,
-#             event,
-#             chain,
-#             node {
-#                 namespace,
-#                 id,
-#                 label
-#             },
-#             origin {
-#                 namespace,
-#                 id,
-#                 label,
-#                 source {
-#                     namespace,
-#                     id,
-#                     label
-#                 },
-#                 target {
-#                     namespace,
-#                     id,
-#                     label
-#                 }
-#             },
-#             path {
-#                 namespace,
-#                 id,
-#                 label,
-#                 source {
-#                     namespace,
-#                     id,
-#                     label
-#                 },
-#                 target {
-#                     namespace,
-#                     id,
-#                     label
-#                 }
-#             },
-#         }
-#     }
-# """
 
 def pathtostring(path):
     spath = ""

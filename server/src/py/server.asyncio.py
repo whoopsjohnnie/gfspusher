@@ -37,10 +37,7 @@ import threading
 import graphql
 
 # from kafka import KafkaProducer
-# from aiokafka import AIOKafkaConsumer
-
-from kafka import KafkaConsumer
-# from kafka import KafkaProducer
+from aiokafka import AIOKafkaConsumer
 
 from gfs.lib.config import GremlinFSConfig
 from gfs.api.graphql.resource.schema import GFSGQLSchemas
@@ -202,22 +199,27 @@ def pathtostring(path):
 
 
 
-# async def consume():
-def consume():
+async def consume():
     schemas = GFSGQLSchemas.instance()
-    consumer = KafkaConsumer(
+    consumer = AIOKafkaConsumer(
+        # kftopic1,
         kftopic2,
-        bootstrap_servers=[ str(kafka_host) + ':' + str(kafka_port) ],
+        bootstrap_servers=str(kafka_host) + ":" + str(kafka_port),
         enable_auto_commit=True,
         group_id=kfgroup,
         auto_offset_reset='latest',
-        value_deserializer=lambda x: x.decode('utf-8'))
-
-    for message in consumer:
-
-        if message:
-
-            msg = message
+        max_poll_records=5,
+        max_poll_interval_ms=3000000,
+        # session_timeout_ms=3000000,
+        # request_timeout_ms=3000000,
+        # connections_max_idle_ms=3000000
+        heartbeat_interval_ms=9000,
+    )
+    # Get cluster layout and join group `my-group`
+    await consumer.start()
+    try:
+        # Consume messages
+        async for msg in consumer:
 
             message = json.loads(msg.value)
             key = msg.key
@@ -326,10 +328,40 @@ def consume():
                             "path": path
                         })
 
+    except Exception as e:
+        # Will leave consumer group; perform autocommit if enabled.
+        await consumer.stop()
+
+    finally:
+        # Will leave consumer group; perform autocommit if enabled.
+        await consumer.stop()
+
+
+
+# async def send_one():
+#     producer = AIOKafkaProducer(
+#         bootstrap_servers=str(kafka_host) + ":" + str(kafka_port)
+#     )
+#     # Get cluster layout and initial topic/partition leadership information
+#     await producer.start()
+#     try:
+#         # Produce message
+#         await producer.send_and_wait(kftopic1, b"Super message")
+#     finally:
+#         # Wait for all pending messages to be delivered or expire.
+#         await producer.stop()
+
 
 
 def __start_background_loop(thing):
-    thread = threading.Thread(target=thing, args=())
+    def run_forever(thing):
+        # RuntimeError: There is no current event loop in thread 'Thread-1'.
+        # loop = asyncio.get_event_loop()
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        result = loop.run_until_complete(thing)
+
+    thread = threading.Thread(target=run_forever, args=(thing,))
     thread.start()
 
 
@@ -342,8 +374,7 @@ def __start_background_loop(thing):
 # AttributeError: module 'asyncio' has no attribute 'run'
 # loop = asyncio.get_event_loop()
 # result = loop.run_until_complete(consume())
-# __start_background_loop(consume())
-__start_background_loop(consume)
+__start_background_loop(consume())
 
 
 

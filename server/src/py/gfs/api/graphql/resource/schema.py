@@ -151,9 +151,6 @@ class GFSGQLSchemas(GFSGQLDynamicObjectType):
 
     # @classmethod
     # def subscription_resolver(clazz, value, info, **args):
-    #   logging.debug("GFSGQLSchemas subscription_resolver")
-    #   logging.debug(value)
-    #   logging.debug(info)
     #   schemas = GFSGQLSchemas.instance()
     #   namespace = "gfs1"
     #   label = "hello"
@@ -185,9 +182,6 @@ class GFSGQLSchemas(GFSGQLDynamicObjectType):
         sig = Signature(params)
 
         # def resolve(*args, **kwargs):
-        #     logging.debug("GFSGQLSchemas makeSubscriptionResolverFunction resolve")
-        #     logging.debug(namespace)
-        #     logging.debug(name)
         # 
         #     clazz = None
         #     value = None
@@ -202,31 +196,15 @@ class GFSGQLSchemas(GFSGQLDynamicObjectType):
         #     return GFSGQLSchemas.instance().subject(namespace, name)
 
         def resolve(*args, **kwargs):
-            logging.debug("GFSGQLSchemas makeSubscriptionResolverFunction resolve with filter")
-            logging.debug(namespace)
-            logging.debug(name)
 
-            logging.debug("root: ")
-            root = args[0]
-            logging.debug("info: ")
-            info = args[1]
+            # root = args[0]
+            # info = args[1]
 
             events = args[3]
             chain = args[4]
             path = args[5]
             nodelabel = args[6]
             originlabel = args[7]
-
-            logging.debug("events: ")
-            logging.debug(events)
-            logging.debug("chain: ")
-            logging.debug(chain)
-            logging.debug("path: ")
-            logging.debug(path)
-            logging.debug("nodelabel: ")
-            logging.debug(nodelabel)
-            logging.debug("originlabel: ")
-            logging.debug(originlabel)
 
             # https://docs.graphene-python.org/projects/django/en/latest/subscriptions/
             # https://pypi.org/project/graphene-subscriptions/
@@ -329,17 +307,7 @@ class GFSGQLSchemas(GFSGQLDynamicObjectType):
         # # http://10.88.88.62:5000/gfs1/graphql/schema
         # surl = "http://" + str(gfs_host) + ":" + str(gfs_port) + "/" + str(namespace) + "/graphql/schema"
         # 
-        # logging.debug("GFSGQLSchemas schema")
-        # logging.debug(namespace)
-        # logging.debug(surl)
-        # 
         # res1 = requests.get(surl)
-        # logging.debug(res1)
-        # # logging.debug(res1.content)
-        # # logging.debug(res1.text)
-        # 
-        # # source_schema = res1
-        # # source_schema = res1.content
         # source_schema = res1.text
 
         # my_schema = self.build_executable_schema(
@@ -389,17 +357,7 @@ class GFSGQLSchemas(GFSGQLDynamicObjectType):
         # # http://10.88.88.62:5000/gfs1/graphql/schema
         # surl = "http://" + str(gfs_host) + ":" + str(gfs_port) + "/" + str(namespace) + "/graphql/schema"
         # 
-        # logging.debug("GFSGQLSchemas schema")
-        # logging.debug(namespace)
-        # logging.debug(surl)
-        # 
         # res1 = requests.get(surl)
-        # logging.debug(res1)
-        # # logging.debug(res1.content)
-        # # logging.debug(res1.text)
-        # 
-        # # source_schema = res1
-        # # source_schema = res1.content
         # source_schema = res1.text
 
         schema_definition = source_schema
@@ -409,10 +367,6 @@ class GFSGQLSchemas(GFSGQLDynamicObjectType):
         return my_schema
 
     def subject(self, namespace, name):
-        logging.debug("GFSGQLSchemas subject")
-        logging.debug(namespace)
-        logging.debug(name)
-        # return self._subject
 
         # if not namespace in self._subjects:
         #     self._subjects[namespace] = {}
