@@ -289,7 +289,7 @@ async def consume():
                 # logging.debug(" NODE EVENT: event: " + str(event))
                 # logging.debug(" NODE EVENT: node id: " + str(nodeid))
                 # logging.debug(" NODE EVENT: node label: " + str(nodelabel))
-                logging.info(" => EVENT: namespace: " + str(namespace) + ", event: " + str(event) + ", node: " + str(nodelabel) + " " + str(nodeid) + ", origin: " + str(originlabel) + " " + str(originid) + ", path: " + str(pathtostring(path)))
+                logging.debug(" => EVENT: namespace: " + str(namespace) + ", event: " + str(event) + ", node: " + str(nodelabel) + " " + str(nodeid) + ", origin: " + str(originlabel) + " " + str(originid) + ", path: " + str(pathtostring(path)))
 
                 # 
                 # Quick and dirty schema rectifier
