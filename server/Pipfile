@@ -34,8 +34,16 @@ importlib-resources = "*"
 # I found that on Red Hat Enterprise Linux 8.4, when installing and testing with python 3.9, 
 # the pip requirements fail to install properly and the test suite fails to run. I think I 
 # will have explicitly specify python 3.6 here and make sure it is available on all test 
-# platforms.
+# platforms. 
+# 
+# Now that python 3.6 is EOL I am upgrading the version of python to version 3.8.
+# 
+# Here are the various versions of python the API has been tested with
+# - python 2.7, original version API was developed with on MacOS
+# - python 3.4, early python3 version on MacOS, and CentOS 7 version
+# - python 3.6, python3 version on MacOS, Ubuntu 18.04, and Alpine 3.9
+# - python 3.8, python3 version on MacOS, Ubuntu 20.04, and Alpine 3.12
 # 
 # python_version = "3"
-python_version = "3.6"
-
+# python_version = "3.6"
+python_version = "3.8"
